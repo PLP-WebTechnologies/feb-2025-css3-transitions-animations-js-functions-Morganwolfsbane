@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Animations with localStorage</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            background-color: #f5f5f5;
+            transition: background-color 0.5s ease;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 2rem;
+        }
+
+        .preference-panel {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            width: 300px;
+            max-width: 100%;
+        }
+
+        .toggle-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        /* Animated Button */
+        .action-btn {
+            padding: 12px 24px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            transform: scale(1);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .action-btn:hover {
+            background-color: #2980b9;
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .action-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Animation Classes */
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .bounce {
+            animation: bounce 0.5s ease infinite alternate;
+        }
+
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-10px); }
+        }
+
+        /* Animated Box */
+        .animated-box {
+            width: 150px;
+            height: 150px;
+            background-color: #2ecc71;
+            border-radius: 8px;
+            margin: 2rem 0;
+            transition: all 0.4s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Theme Styles */
+        .dark-mode {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+        }
+
+        .dark-mode .preference-panel {
+            background: #34495e;
+            color: #ecf0f1;
+        }
+    </style>
+</head>
+<body>
+    <h1>Interactive Animations Demo</h1>
+    
+    <div class="preference-panel">
+        <h2>User Preferences</h2>
+        
+        <div class="toggle-container">
+            <label for="darkMode">Dark Mode:</label>
+            <input type="checkbox" id="darkMode">
+        </div>
+        
+        <div class="toggle-container">
+            <label for="animationType">Animation Style:</label>
+            <select id="animationType">
+                <option value="pulse">Pulse</option>
+                <option value="spin">Spin</option>
+                <option value="bounce">Bounce</option>
+            </select>
+        </div>
+        
+        <button id="applyBtn" class="action-btn">Apply Preferences</button>
+    </div>
+    
+    <div class="animated-box" id="demoBox">
+        Animation Demo
+    </div>
+    
+    <button id="animateBtn" class="action-btn">Trigger Animation</button>
+    
+    <script>
+        // DOM Elements
+        const darkModeToggle = document.getElementById('darkMode');
+        const animationTypeSelect = document.getElementById('animationType');
+        const applyBtn = document.getElementById('applyBtn');
+        const animateBtn = document.getElementById('animateBtn');
+        const demoBox = document.getElementById('demoBox');
+        const body = document.body;
+
+        // Load saved preferences from localStorage
+        function loadPreferences() {
+            // Dark Mode Preference
+            const darkMode = localStorage.getItem('darkMode') === 'true';
+            darkModeToggle.checked = darkMode;
+            if (darkMode) {
+                body.classList.add('dark-mode');
+            }
+
+            // Animation Preference
+            const savedAnimation = localStorage.getItem('animationType');
+            if (savedAnimation) {
+                animationTypeSelect.value = savedAnimation;
+            }
+        }
+
+        // Save preferences to localStorage
+        function savePreferences() {
+            localStorage.setItem('darkMode', darkModeToggle.checked);
+            localStorage.setItem('animationType', animationTypeSelect.value);
+        }
+
+        // Apply selected animation to the box
+        function applyAnimation() {
+            // Remove all animation classes first
+            demoBox.classList.remove('pulse', 'spin', 'bounce');
+            
+            // Add the selected animation class
+            const animationType = animationTypeSelect.value;
+            demoBox.classList.add(animationType);
+        }
+
+        // Toggle dark mode
+        function toggleDarkMode() {
+            body.classList.toggle('dark-mode', darkModeToggle.checked);
+        }
+
+        // Initialize
+        function init() {
+            loadPreferences();
+            toggleDarkMode();
+            applyAnimation();
+
+            // Event Listeners
+            applyBtn.addEventListener('click', function() {
+                savePreferences();
+                toggleDarkMode();
+                applyAnimation();
+            });
+
+            animateBtn.addEventListener('click', function() {
+                // Trigger animation by removing and re-adding the class
+                const animationType = animationTypeSelect.value;
+                demoBox.classList.remove(animationType);
+                
+                // Force reflow to restart animation
+                void demoBox.offsetWidth;
+                
+                demoBox.classList.add(animationType);
+                
+                // Add click effect
+                this.classList.add('active');
+                setTimeout(() => this.classList.remove('active'), 300);
+            });
+
+            // Bonus: Save preferences automatically when changed
+            darkModeToggle.addEventListener('change', function() {
+                savePreferences();
+                toggleDarkMode();
+            });
+
+            animationTypeSelect.addEventListener('change', function() {
+                savePreferences();
+                applyAnimation();
+            });
+        }
+
+        // Start the application
+        init();
+    </script>
+</body>
+</html>
